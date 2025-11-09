@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capítulo 5: Resumen de Analizadores LR (Compiladores)</title>
+    <style>
+        body { font-family: 'Arial', sans-serif; line-height: 1.6; margin: 0; padding: 20px; background-color: #f4f4f9; color: #333; }
+        .container { max-width: 900px; margin: auto; background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        h1, h2, h3 { color: #007bff; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 20px; }
+        h1 { text-align: center; color: #0056b3; }
+        .slide { margin-bottom: 30px; padding: 15px; border-left: 5px solid #007bff; background-color: #e9f7ff; border-radius: 5px; }
+        ul { list-style: disc; margin-left: 20px; }
+        li strong { color: #333; }
+        code { background-color: #eee; padding: 2px 4px; border-radius: 3px; font-family: 'Consolas', monospace; }
+        blockquote { border-left: 4px solid #ccc; margin: 10px 0; padding-left: 10px; color: #555; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Compiladores - Capítulo 5: Análisis Sintáctico LR 🛠️</h1>
+        <p style="text-align: center;">Presentación basada en la Universidad Tecnológica de Santiago (UTESA)[cite: 1].</p>
+
+        <div class="slide">
+            <h2>1. Introducción al Análisis Sintáctico LR</h2>
+            <ul>
+                <li><strong>Definición:</strong> Es una técnica de <strong>análisis ascendente</strong> que construye el árbol sintáctico leyendo la entrada de izquierda a derecha (L) y produciendo derivaciones por la derecha (R)[cite: 24, 25].</li>
+                <li><strong>LR (Left-to-right, Rightmost derivation):</strong> Es el enfoque estándar para analizadores eficientes en compiladores industriales[cite: 25].</li>
+                <li><strong>Objetivos Principales:</strong>
+                    <ul>
+                        <li>Detectar si una secuencia de tokens pertenece al lenguaje definido por una gramática libre de contexto[cite: 27].</li>
+                        <li>Construir la **estructura sintáctica (árbol)** para etapas siguientes (semántica, generación de código)[cite: 28].</li>
+                        <li>Detectar y reportar errores sintácticos de forma robusta[cite: 29].</li>
+                    </ul>
+                </li>
+                <li><strong>Características Clave:</strong> Se basa en **tablas** (estados, acciones: desplazar/reducir/aceptar/errores) y es escalable a gramáticas de lenguajes de programación reales[cite: 30, 31, 32].</li>
+            </ul>
+        </div>
+
+        <div class="slide">
+            <h2>2. Tipos de Analizadores LR: SLR, LALR y LR(1)</h2>
+            <p>Son las tres variantes principales, elegidas según la potencia necesaria y el tamaño de la tabla[cite: 35, 37].</p>
+            <ul>
+                <li><strong>LR(1) Canónico:</strong>
+                    <ul>
+                        <li><strong>Máxima potencia</strong> (menos conflictos)[cite: 39].</li>
+                        <li>Cada elemento tiene su conjunto de símbolos de anticipación (<em>lookahead</em>)[cite: 38].</li>
+                        <li>Genera **muchos estados** (tablas grandes)[cite: 39].</li>
+                    </ul>
+                </li>
+                <li><strong>LALR(1) (Lookahead LR):</strong>
+                    <ul>
+                        <li>Combina estados con el mismo "corazón" (<em>core</em>) pero diferentes <em>lookaheads</em>[cite: 40].</li>
+                        <li>Reduce el número de estados respecto a LR(1)[cite: 41]. Es el <strong>más usado</strong> (ej. Yacc/Bison)[cite: 41, 44].</li>
+                        <li>**Práctico, compacto, y suficiente** para la mayoría de lenguajes[cite: 49].</li>
+                    </ul>
+                </li>
+                <li><strong>SLR(1) (Simple LR):</strong>
+                    <ul>
+                        <li>Emplea conjuntos <strong>FOLLOW</strong> simples al decidir reducciones[cite: 42].</li>
+                        <li>Es el **más compacto** pero **menos poderoso** (puede generar conflictos)[cite: 42, 50].</li>
+                        <li>Solo recomendado para gramáticas muy simples o enseñanza[cite: 46].</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+
+        <div class="slide">
+            <h2>3. Gramáticas Ambiguas y 4. Precedencia/Asociatividad</h2>
+            <p>La ambigüedad surge cuando una cadena tiene más de un árbol de derivación[cite: 53]. Esto se resuelve con reglas externas.</p>
+            <ul>
+                <li><strong>Manejo de Ambigüedad:</strong> Las gramáticas ambiguas (como en las expresiones) se usan por conveniencia y se resuelven mediante reglas de **precedencia y asociatividad**[cite: 55, 59].</li>
+                <li><strong>Conflicto Shift/Reduce:</strong> Ocurre al construir la tabla LR y se define la decisión usando precedencia y asociatividad[cite: 61, 62].</li>
+                <li><strong>Declaraciones en Yacc/Bison:</strong>
+                    <ul>
+                        <li><code>%left '+' '-'</code>: Asociatividad izquierda para operadores de igual precedencia[cite: 64].</li>
+                        <li><code>%left '*' '/'</code>: Mayor precedencia si se declaran después de <code>+</code> y <code>-</code>[cite: 65].</li>
+                        <li><code>%right '^'</code>: Asociatividad derecha (ej. para el exponente)[cite: 66].</li>
+                        <li><code>%prec</code>: Fuerza la precedencia en una producción específica (útil para operadores unarios)[cite: 71].</li>
+                    </ul>
+                </li>
+            </ul>
+            <p><strong>Ejemplo:</strong> En <code>id + id * id</code>, si <code>*</code> tiene mayor precedencia, el parser elige **shift** para <code>*</code>, resultando en <code>id + (id * id)</code>[cite: 68, 69].</p>
+        </div>
+
+        <div class="slide">
+            <h2>5. El Problema del "Else Colgante" y 6. Recuperación de Errores</h2>
+            <ul>
+                <li><strong>Else Colgante:</strong> Es una ambigüedad en secuencias de <code>if</code> anidados[cite: 73, 78].
+                    <ul>
+                        <li><strong>Convención:</strong> El <code>else</code> se asocia con el <code>if</code> **más cercano**[cite: 79].</li>
+                        <li><strong>Resolución LR:</strong> Se resuelve el conflicto shift/reduce **a favor de shift** cuando el siguiente token es <code>else</code>, prefiriendo consumir el <code>else</code> antes de reducir la producción corta[cite: 80, 81].</li>
+                    </ul>
+                </li>
+                <li><strong>Recuperación de Errores:</strong> El analizador detecta un error cuando la entrada es <code>error</code> para el estado actual[cite: 84].
+                    <ul>
+                        <li><strong>Pánico:</strong> Retroceder en la pila hasta un estado que acepte un símbolo de sincronización (ej. <code>;</code> o <code>}</code>), descartando tokens hasta llegar a ese símbolo[cite: 85, 86].</li>
+                        <li><strong>Producciones de Error (Yacc):</strong> Usar reglas como <code>A: error a</code> para controlar la recuperación en puntos específicos[cite: 87].</li>
+                        <li><strong>Objetivo:</strong> Evitar ciclos infinitos. Siempre se debe reducir, eliminar símbolo de entrada, o disminuir la pila[cite: 93].</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+
+        <div class="slide">
+            <h2>7. Yacc y 8. Integración con Lex</h2>
+            <p><strong>Yacc (Yet Another Compiler Compiler)</strong> es un generador de analizadores **LALR(1)**[cite: 95, 97].</p>
+            <ul>
+                <li><strong>Flujo de Yacc:</strong> <code>archivo.y --yacc--> y.tab.c --cc--> ejecutable</code>[cite: 99].</li>
+                <li><strong>Estructura del Archivo Yacc (<code>.y</code>):</strong>
+                    <ol>
+                        <li><strong>Declaraciones:</strong> <code>%token</code>, <code>%left</code>, <code>includes</code> (entre <code>%{ %}</code>)[cite: 101].</li>
+                        <li><strong>Reglas:</strong> Producciones y **acciones semánticas** (entre <code>%% %%</code>)[cite: 102].</li>
+                        <li><strong>Soporte C:</strong> Funciones auxiliares como <code>yylex()</code> y <code>yyerror()</code>[cite: 103].</li>
+                    </ol>
+                </li>
+                <li><strong>Variables Semánticas:</strong> <code>$$</code> es el valor asociado al símbolo de la izquierda; <code>$1, $2, ...</code> son los valores de los símbolos del cuerpo de la producción[cite: 105, 106].</li>
+                <li><strong>Integración Lex:</strong>
+                    <ul>
+                        <li><strong>Lex</strong> genera el analizador léxico <code>yylex()</code>[cite: 113, 121].</li>
+                        <li>Lex analiza caracteres, devuelve **tokens** a Yacc (parser) y pasa los atributos (ej. valores numéricos) a través de la variable <code>yylval</code>[cite: 113, 115].</li>
+                        <li>**Ventaja:** Separación clara entre tokenización (Lex) y parsing (Yacc/Bison), lo que lleva a un código más modular[cite: 124].</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+
+        <div class="slide">
+            <h2>9. Ejemplo Completo: Calculadora (Yacc + Lex)</h2>
+            <p>Muestra cómo se definen la precedencia, la asociatividad, el operador unario y las acciones semánticas.</p>
+            <p><strong>Declaraciones de Precedencia (<code>calc.y</code>):</strong></p>
+            <pre><code>%token NUM
+%left '+' '-'
+%left '*' '/'
+%right NEG // Para operador unario '-'</code></pre> [cite: 132-135]
+            <p><strong>Reglas de Expresión (<code>calc.y</code> - Acciones Semánticas):</strong></p>
+            <pre><code>expr: expr '+' expr { $$ = $1 + $3; }
+    | '-' expr %prec NEG { $$ = -$2; } // Aplica precedencia unaria
+    | NUM { $$ = $1; }</code></pre> [cite: 141, 145, 147]
+            <p><strong>Acción Léxica (<code>calc.l</code>):</strong></p>
+            <pre><code>[0-9]+ { yylval = atof(yytext); return NUM; } // Devuelve NUM y su valor en yylval</code></pre> [cite: 155]
+            <p><strong>Compilación:</strong></p>
+            <pre><code>lex calc.l
+yacc -d calc.y
+gcc lex.yy.c y.tab.c -o calc -ly -ll</code></pre> [cite: 162-164]
+        </div>
+
+        <div class="slide">
+            <h2>10. Conclusiones y Buenas Prácticas 💡</h2>
+            <ul>
+                <li><strong>Fiabilidad:</strong> **LR(1) / LALR(1)** son las opciones más fiables; LALR es la opción práctica y suficiente casi siempre[cite: 172].</li>
+                <li><strong>Diseño:</strong> Usar **gramáticas ambiguas más simples** con reglas de precedencia y asociatividad para mantener especificaciones legibles[cite: 173].</li>
+                <li><strong>Modularidad:</strong> Separar responsabilidades: **Lex** para tokenización; **Yacc/Bison** para parsing y acciones semánticas[cite: 174, 175].</li>
+                <li><strong>Prueba y Documentación:</strong>
+                    <ul>
+                        <li>Revisar conflictos con Yacc/Bison (<code>-v</code>)[cite: 176].</li>
+                        <li>Definir precedencias explícitas[cite: 177].</li>
+                        <li>Documentar las decisiones de diseño (ej. asociatividad)[cite: 179].</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+</body>
+</html>
